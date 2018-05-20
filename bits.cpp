@@ -1,6 +1,10 @@
 #include "bits.h"
 #include <string>
 #include <bitset>
+#include <regex>
+#include <sstream>
+#include <iostream>
+#include <QDebug>
 
 using std::string;
 using std::bitset;
@@ -88,9 +92,7 @@ void Bits::reverse_all(){
     bit_data &= bit_mask;
 }
 
-/*             shift operate
- *
- */
+/**********************   shift operate *******************/
 void Bits::shift_arithmetic_right(unsigned  int bit_num){
     bit_num = bit_num % width;
     if (bit_data[width-1] == 0){
@@ -125,6 +127,7 @@ void Bits::shift_rotate_right(unsigned int bit_num){
     }
 }
 
+/************* get format string ***********************/
 string Bits::get_hex_string(){
     char buff[100];
     sprintf(buff,"%llX",bit_data.to_ullong());
@@ -166,3 +169,119 @@ void Bits::set_data(uint64_t data){
     bit_data = data;
     bit_data &= bit_mask;
 }
+
+/******************    check string format *************************/
+
+bool Bits::is_hex_format(string input_str){
+    unsigned int max_len;
+    max_len = this->width/4;
+    std::string pattern("^[0x]*0*[0-9a-fA-F]{1,"+ std::to_string(max_len) +"}$");
+    std::regex re(pattern);
+    return std::regex_match(input_str, re);
+}
+
+bool Bits::is_dec_unsigned_format(string input_str){
+    uint64_t max_value,value;
+    unsigned int max_len=20;  //64bit max dec width
+    max_value = this->bit_mask.to_ullong();
+    std::string pattern("^0*[0-9]{1,"+ std::to_string(max_len) +"}$");
+    std::regex re(pattern);
+    if (regex_match(input_str,re)){
+        try {
+            value = std::stoull(input_str,nullptr,10);
+        }
+        catch (std::out_of_range) {
+            return false;
+        }
+        if (value <= max_value)
+            return true;
+    }
+    return false;
+}
+
+bool Bits::is_dec_signed_format(string input_str){
+    uint64_t value;
+    unsigned int max_len=19;  //64bit max dec width
+    std::string pattern("^-*0*[0-9]{1,"+ std::to_string(max_len) +"}$");
+    std::regex re(pattern);
+    if (regex_match(input_str,re)){
+        try {
+            value =(unsigned long long) std::stoll(input_str,nullptr,10);
+        }
+        catch (std::out_of_range) {
+            return false;
+        }
+        if ((value & ~(this->bit_mask.to_ullong())) == 0)
+            return true;
+    }
+    return false;
+}
+
+bool Bits::is_oct_format(string input_str){
+    unsigned int max_len;
+    bool format_ok;
+    uint64_t value, max_value;
+    std::stringstream ss;
+    max_len = (this->width+2)/3;
+    max_value = this->bit_mask.to_ullong();
+    std::string pattern("^0*[0-7]{1,"+ std::to_string(max_len) +"}$");
+    std::regex re(pattern);
+    format_ok = std::regex_match(input_str, re);
+    if(format_ok){ //check is to big
+        value = std::stoull(input_str,nullptr,8);
+        if (value <= max_value)
+            return true;
+    }
+    return false;
+}
+
+bool Bits::is_bin_format(string input_str){
+    unsigned int max_len;
+    max_len = this->width;
+    std::string pattern("^[0-1]{1,"+ std::to_string(max_len) +"}$");
+    std::regex re(pattern);
+    return std::regex_match(input_str, re);
+}
+
+/****************** set value by string  *************************/
+bool Bits::set_hex_string(string input_str){
+    if (is_hex_format(input_str)){
+        this->set_data(std::stoull(input_str,nullptr,16));
+        return true;
+    }
+    return false;
+}
+
+bool Bits::set_oct_string(string input_str){
+    if (is_oct_format(input_str)){
+        this->set_data(std::stoull(input_str,nullptr,8));
+        return true;
+    }
+    return false;
+
+}
+
+bool Bits::set_bin_string(string input_str){
+    if (is_bin_format(input_str)){
+        this->set_data(std::stoull(input_str,nullptr,2));
+        return true;
+    }
+    return false;
+}
+
+bool Bits::set_dec_unsigned_string(string input_str){
+    if (is_dec_unsigned_format(input_str)){
+        this->set_data(std::stoull(input_str,nullptr,10));
+        return true;
+    }
+    return false;
+}
+
+bool Bits::set_dec_signed_string(string input_str){
+    if (is_dec_signed_format(input_str)){
+        this->set_data(std::stoull(input_str,nullptr,10));
+        return true;
+    }
+    return false;
+}
+

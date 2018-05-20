@@ -41,7 +41,23 @@ public:
     string get_dec_signed_string();
     string get_oct_string();
     string get_bin_string();
-    string get_addr_string();
+    //string get_addr_string();
+
+    /* 
+        if success return true, set the value.
+        if failed, return false, not set the value.
+    */
+    bool set_hex_string(string input_str);
+    bool set_dec_unsigned_string(string input_str);
+    bool set_dec_signed_string(string input_str);
+    bool set_oct_string(string input_str);
+    bool set_bin_string(string input_str);
+
+    bool is_hex_format(string input_str);
+    bool is_dec_unsigned_format(string input_str);
+    bool is_dec_signed_format(string input_str);
+    bool is_oct_format(string input_str);
+    bool is_bin_format(string input_str);
 
     void set_data(unsigned long long bit_data);
 
